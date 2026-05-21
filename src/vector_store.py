@@ -1,54 +1,36 @@
-import chromadb
-from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
-
-COLLECTION_NAME = "documind"
-# DefaultEmbeddingFunction uses all-MiniLM-L6-v2 via onnxruntime — no PyTorch needed
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
-def create_collection(chunks: list[str]):
-    """
-    Embed chunks and store in a new in-memory ChromaDB collection.
-    Returns (client, collection) — keep both in session state.
-    """
+def create_collection(chunks: list[str]) -> dict:
+    """Build a TF-IDF index from document chunks."""
     if not chunks:
-        raise ValueError("No chunks provided for embedding.")
+        raise ValueError("No chunks provided.")
 
-    client = chromadb.Client()
-    ef = DefaultEmbeddingFunction()
+    vectorizer = TfidfVectorizer(stop_words="english")
+    matrix = vectorizer.fit_transform(chunks)
 
-    collection = client.create_collection(
-        name=COLLECTION_NAME,
-        embedding_function=ef,
-        metadata={"hnsw:space": "cosine"},
-    )
-
-    batch_size = 5000
-    for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
-        collection.add(
-            documents=batch,
-            ids=[f"chunk_{i + j}" for j in range(len(batch))],
-        )
-
-    return client, collection
+    return {"vectorizer": vectorizer, "matrix": matrix, "chunks": chunks}
 
 
 def query_collection(
-    collection,
+    collection: dict,
     question: str,
     n_results: int = 4,
 ) -> tuple[list[str], list[float]]:
-    """Return (documents, distances) for the most relevant chunks."""
-    if not question.strip():
-        raise ValueError("Question cannot be empty.")
+    """Return (documents, distances) — distance = 1 - cosine_similarity."""
+    vectorizer = collection["vectorizer"]
+    matrix = collection["matrix"]
+    chunks = collection["chunks"]
 
-    actual_n = min(n_results, collection.count())
-    if actual_n == 0:
-        return [], []
+    q_vec = vectorizer.transform([question])
+    scores = cosine_similarity(q_vec, matrix)[0]
 
-    results = collection.query(
-        query_texts=[question],
-        n_results=actual_n,
-    )
+    top_n = min(n_results, len(chunks))
+    top_indices = np.argsort(scores)[-top_n:][::-1]
 
-    return results["documents"][0], results["distances"][0]
+    docs = [chunks[i] for i in top_indices]
+    distances = [float(1 - scores[i]) for i in top_indices]  # 0=identical, 1=unrelated
+
+    return docs, distances

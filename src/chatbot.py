@@ -1,7 +1,7 @@
 import os
 
 # Cosine distance threshold — chunks above this are considered irrelevant
-RELEVANCE_THRESHOLD = 0.55
+RELEVANCE_THRESHOLD = 0.85  # TF-IDF cosine distance: 0=identical, 1=unrelated
 
 NOT_FOUND_MSG = "I could not find this information in the uploaded document."
 
