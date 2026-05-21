@@ -79,11 +79,13 @@ with st.sidebar:
 
     # AI mode indicator
     st.markdown("**AI Engine**")
-    if os.environ.get("OPENAI_API_KEY"):
+    if os.environ.get("GEMINI_API_KEY"):
+        st.success("Google Gemini 1.5 Flash ✨")
+    elif os.environ.get("OPENAI_API_KEY"):
         st.success("OpenAI GPT-3.5 Turbo")
     else:
-        st.info("Extractive mode (Free)")
-        st.caption("Add `OPENAI_API_KEY` to `.env` for GPT-3.5 answers.")
+        st.info("Extractive mode (no API key)")
+        st.caption("Add `GEMINI_API_KEY` to Streamlit secrets for AI answers.")
 
     st.divider()
 

@@ -1,22 +1,16 @@
 import os
 from spellchecker import SpellChecker
 
-RELEVANCE_THRESHOLD = 0.85  # TF-IDF cosine distance: 0=identical, 1=unrelated
+RELEVANCE_THRESHOLD = 0.85
 NOT_FOUND_MSG = "I could not find this information in the uploaded document."
 
 _spell = SpellChecker()
 
 
 def correct_query(text: str) -> tuple[str, bool]:
-    """
-    Spell-correct each word in the query.
-    Returns (corrected_text, was_changed).
-    """
+    """Spell-correct each word in the query. Returns (corrected, was_changed)."""
     words = text.split()
-    corrected = []
-    for word in words:
-        fixed = _spell.correction(word)
-        corrected.append(fixed if fixed else word)
+    corrected = [_spell.correction(w) or w for w in words]
     result = " ".join(corrected)
     return result, result.lower() != text.lower()
 
@@ -29,6 +23,18 @@ def _build_prompt(question: str, context: str) -> str:
         f"Question: {question}\n\n"
         "Answer:"
     )
+
+
+def _answer_gemini(question: str, context: str, sources: list[str]) -> dict:
+    import google.generativeai as genai
+
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(_build_prompt(question, context))
+    return {
+        "answer": response.text.strip(),
+        "sources": sources,
+    }
 
 
 def _answer_openai(question: str, context: str, sources: list[str]) -> dict:
@@ -51,19 +57,14 @@ def _answer_extractive(sources: list[str]) -> dict:
     top = sources[0]
     answer = (
         f"**From the document:**\n\n{top}\n\n"
-        f"*Tip: Add an `OPENAI_API_KEY` to `.env` for AI-generated answers.*"
+        f"*Tip: Add a `GEMINI_API_KEY` to Streamlit secrets for AI-generated answers.*"
     )
     return {"answer": answer, "sources": sources}
 
 
-def get_answer(
-    question: str,
-    chunks: list[str],
-    distances: list[float],
-) -> dict:
+def get_answer(question: str, chunks: list[str], distances: list[float]) -> dict:
     """
-    Generate an answer from retrieved chunks.
-    Uses OpenAI if key is set, otherwise returns the best matching passage.
+    Priority: Gemini (free) → OpenAI → Extractive fallback.
     """
     relevant = [
         (chunk, dist)
@@ -76,6 +77,9 @@ def get_answer(
 
     sources = [c for c, _ in relevant]
     context = "\n\n---\n\n".join(sources)
+
+    if os.environ.get("GEMINI_API_KEY"):
+        return _answer_gemini(question, context, sources)
 
     if os.environ.get("OPENAI_API_KEY"):
         return _answer_openai(question, context, sources)
