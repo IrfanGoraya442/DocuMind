@@ -25,15 +25,17 @@ def _build_prompt(question: str, context: str) -> str:
     )
 
 
-def _answer_gemini(question: str, context: str, sources: list[str]) -> dict:
-    from google import genai
+def _answer_groq(question: str, context: str, sources: list[str]) -> dict:
+    from groq import Groq
 
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=_build_prompt(question, context),
+    client = Groq(api_key=os.environ["GROQ_API_KEY"])
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": _build_prompt(question, context)}],
+        temperature=0,
+        max_tokens=500,
     )
-    return {"answer": response.text.strip(), "sources": sources}
+    return {"answer": response.choices[0].message.content.strip(), "sources": sources}
 
 
 def _answer_openai(question: str, context: str, sources: list[str]) -> dict:
@@ -77,8 +79,8 @@ def get_answer(question: str, chunks: list[str], distances: list[float]) -> dict
     sources = [c for c, _ in relevant]
     context = "\n\n---\n\n".join(sources)
 
-    if os.environ.get("GEMINI_API_KEY"):
-        return _answer_gemini(question, context, sources)
+    if os.environ.get("GROQ_API_KEY"):
+        return _answer_groq(question, context, sources)
 
     if os.environ.get("OPENAI_API_KEY"):
         return _answer_openai(question, context, sources)
