@@ -3,7 +3,7 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 
-from src.chatbot import get_answer
+from src.chatbot import get_answer, correct_query
 from src.pdf_loader import load_pdf
 from src.text_splitter import split_text
 from src.vector_store import create_collection, query_collection
@@ -207,20 +207,25 @@ if st.session_state.collection is not None:
     )
 
     if user_question:
-        # Display user message immediately
+        # Auto-correct the query
+        corrected_question, was_corrected = correct_query(user_question)
+
+        # Display user message
         st.session_state.chat_history.append({"role": "user", "content": user_question, "sources": []})
         with st.chat_message("user"):
             st.write(user_question)
+            if was_corrected:
+                st.caption(f"🔤 Auto-corrected to: *{corrected_question}*")
 
-        # Generate answer
+        # Generate answer using corrected query
         with st.chat_message("assistant"):
             with st.spinner("Searching document and generating answer..."):
                 try:
                     chunks, distances = query_collection(
-                        st.session_state.collection, user_question
+                        st.session_state.collection, corrected_question
                     )
 
-                    result = get_answer(user_question, chunks, distances)
+                    result = get_answer(corrected_question, chunks, distances)
 
                     answer = result["answer"]
                     sources = result["sources"]

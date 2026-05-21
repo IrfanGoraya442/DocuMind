@@ -1,9 +1,24 @@
 import os
+from spellchecker import SpellChecker
 
-# Cosine distance threshold — chunks above this are considered irrelevant
 RELEVANCE_THRESHOLD = 0.85  # TF-IDF cosine distance: 0=identical, 1=unrelated
-
 NOT_FOUND_MSG = "I could not find this information in the uploaded document."
+
+_spell = SpellChecker()
+
+
+def correct_query(text: str) -> tuple[str, bool]:
+    """
+    Spell-correct each word in the query.
+    Returns (corrected_text, was_changed).
+    """
+    words = text.split()
+    corrected = []
+    for word in words:
+        fixed = _spell.correction(word)
+        corrected.append(fixed if fixed else word)
+    result = " ".join(corrected)
+    return result, result.lower() != text.lower()
 
 
 def _build_prompt(question: str, context: str) -> str:
@@ -32,11 +47,7 @@ def _answer_openai(question: str, context: str, sources: list[str]) -> dict:
     }
 
 
-def _answer_extractive(question: str, sources: list[str]) -> dict:
-    """
-    Free fallback: return the most relevant passage with a clean label.
-    No LLM download required — works offline.
-    """
+def _answer_extractive(sources: list[str]) -> dict:
     top = sources[0]
     answer = (
         f"**From the document:**\n\n{top}\n\n"
@@ -69,4 +80,4 @@ def get_answer(
     if os.environ.get("OPENAI_API_KEY"):
         return _answer_openai(question, context, sources)
 
-    return _answer_extractive(question, sources)
+    return _answer_extractive(sources)
