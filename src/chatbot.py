@@ -25,16 +25,31 @@ def _build_prompt(question: str, context: str) -> str:
     )
 
 
+_GEMINI_MODELS = [
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-pro",
+    "gemini-1.0-pro",
+]
+
+
 def _answer_gemini(question: str, context: str, sources: list[str]) -> dict:
     import google.generativeai as genai
 
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(_build_prompt(question, context))
-    return {
-        "answer": response.text.strip(),
-        "sources": sources,
-    }
+    prompt = _build_prompt(question, context)
+    last_error = None
+
+    for model_name in _GEMINI_MODELS:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return {"answer": response.text.strip(), "sources": sources}
+        except Exception as e:
+            last_error = e
+            continue
+
+    raise RuntimeError(f"No Gemini model available: {last_error}")
 
 
 def _answer_openai(question: str, context: str, sources: list[str]) -> dict:
