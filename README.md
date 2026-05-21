@@ -8,9 +8,11 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20Store-6C3483?style=for-the-badge)](https://trychroma.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F39C12?style=for-the-badge)](LICENSE)
-[![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-E74C3C?style=for-the-badge)](https://github.com)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://3e5oqcgyrvyodm9pp8239u.streamlit.app/)
 
 **Upload any PDF. Ask any question. Get answers straight from the document.**
+
+🚀 **[Try the Live Demo →](https://3e5oqcgyrvyodm9pp8239u.streamlit.app/)**
 
 [Features](#-features) · [Demo](#-screenshots) · [Quick Start](#-quick-start) · [How It Works](#-how-it-works) · [Tech Stack](#-tech-stack)
 
