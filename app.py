@@ -61,7 +61,6 @@ st.markdown(
 
 # ── Session state init ────────────────────────────────────────────────────────
 defaults = {
-    "chroma_client": None,
     "collection": None,
     "pdf_name": None,
     "chunk_count": 0,
@@ -97,7 +96,7 @@ with st.sidebar:
         col2.metric("Q&A", st.session_state.questions_answered)
 
         if st.button("🗑️ Clear Document", use_container_width=True):
-            for key in ["chroma_client", "collection", "pdf_name", "chunk_count", "chat_history", "questions_answered"]:
+            for key in ["collection", "pdf_name", "chunk_count", "chat_history", "questions_answered"]:
                 st.session_state[key] = defaults[key]
             st.rerun()
 
@@ -162,10 +161,9 @@ if uploaded_file is not None:
                 chunks = split_text(text)
 
                 st.write("🧠 Generating embeddings (first run may download ~80MB model)...")
-                client, collection = create_collection(chunks)
+                collection = create_collection(chunks)
 
                 # Persist in session
-                st.session_state.chroma_client = client
                 st.session_state.collection = collection
                 st.session_state.pdf_name = uploaded_file.name
                 st.session_state.chunk_count = len(chunks)
