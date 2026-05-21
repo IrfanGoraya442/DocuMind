@@ -1,0 +1,12 @@
+# Core
+streamlit>=1.28.0
+python-dotenv>=1.0.0
+
+# PDF parsing
+pypdf>=3.17.0
+
+# Vector store + embeddings (uses onnxruntime internally — no PyTorch needed)
+chromadb>=0.4.18
+
+# Optional: OpenAI (only needed if OPENAI_API_KEY is set in .env)
+openai>=1.6.0
