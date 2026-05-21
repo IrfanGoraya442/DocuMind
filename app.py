@@ -74,7 +74,7 @@ for key, val in defaults.items():
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 📄 DocuMind AI")
-    st.caption("Powered by Sentence Transformers + ChromaDB")
+    st.caption("Powered by Gemini AI + TF-IDF Search")
     st.divider()
 
     # AI mode indicator
@@ -114,7 +114,7 @@ with st.sidebar:
     )
     st.divider()
     st.markdown(
-        "<small>Built with Streamlit · LangChain · ChromaDB</small>",
+        "<small>Built with Streamlit · Gemini AI · scikit-learn</small>",
         unsafe_allow_html=True,
     )
 
